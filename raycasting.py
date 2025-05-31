@@ -2,7 +2,6 @@ import pygame as pg
 import math
 from settings import *
 
-
 class RayCasting:
     def __init__(self, game):
         self.game = game
@@ -11,8 +10,8 @@ class RayCasting:
         ox, oy = self.game.player.pos
         x_map, y_map = self.game.player.map_pos
 
-        ray_angle = self.game.player.angle - HALF_FOV + 0.0001
-        for _ in range(NUM_RAYS):
+        ray_angle = self.game.player.angle - HALF_FOV
+        for ray in range(NUM_RAYS):
             sin_a = math.sin(ray_angle)
             cos_a = math.cos(ray_angle)
 
@@ -48,18 +47,20 @@ class RayCasting:
                 y_vert += dy
                 depth_vert += delta_depth
 
-            # --- CHOOSE SHORTEST RAY ---
-            if depth_vert < depth_hor:
-                depth = depth_vert
-            else:
-                depth = depth_hor
+            # --- FISHBOWL EFFECT (sem correção angular) ---
+            depth = min(depth_vert, depth_hor)
 
-            # --- DRAW DEBUG RAY ---
-            pg.draw.line(
-                self.game.screen, 'yellow',
-                (100 * ox, 100 * oy),
-                (100 * (ox + depth * cos_a), 100 * (oy + depth * sin_a)),
-                2
+            # PROPOSITALMENTE NÃO CORRIGIDO:
+            # depth *= math.cos(self.game.player.angle - ray_angle)
+
+            proj_height = SCREEN_DIST / (depth + 0.0001)
+
+            # --- Preto e branco fixo ---
+            color = (255, 255, 255)
+
+            pg.draw.rect(
+                self.game.screen, color,
+                (ray * SCALE, HALF_HEIGHT - proj_height // 2, SCALE, proj_height)
             )
 
             ray_angle += DELTA_ANGLE
